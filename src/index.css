@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-background: oklch(0.10 0.01 240);
+  --color-foreground: oklch(0.97 0 0);
+  --color-card: oklch(0.15 0.01 240);
+  --color-primary: oklch(0.72 0.20 210);
+  --color-primary-foreground: oklch(0.10 0 0);
+  --color-accent: oklch(0.78 0.18 195);
+  --color-accent-foreground: oklch(0.10 0 0);
+  --color-secondary: oklch(0.20 0.02 240);
+  --color-muted: oklch(0.22 0.01 240);
+  --color-muted-foreground: oklch(0.62 0.02 240);
+  --color-success: oklch(0.72 0.18 150);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-border: oklch(0.25 0.02 240);
+
+  --radius-lg: 0.5rem;
+  --radius-md: calc(0.5rem - 2px);
+  --radius-sm: calc(0.5rem - 4px);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom scrollbar to keep up with the dark tech theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-background);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-muted-foreground);
+  }
+
+  /* Smooth Focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Glass effect from Sleek Interface design */
+.glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Technological Grid/Overlay pattern background */
+.tech-bg {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(184, 237, 248, 0.03) 0px, transparent 50%),
+    radial-gradient(at 50% 0%, rgba(121, 187, 255, 0.04) 0px, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.003) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.003) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 30px 30px, 30px 30px;
+}
+
+/* Animations helper */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; filter: drop-shadow(0 0 4px var(--color-accent)); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s infinite ease-in-out;
+}
