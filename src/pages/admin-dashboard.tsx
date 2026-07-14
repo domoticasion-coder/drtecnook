@@ -90,6 +90,7 @@ export const AdminDashboardPage: React.FC = () => {
   // Editing states
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [isCollectionModalOpen, setIsCollectionModalOpen] = useState(false);
+  const [isNewCollection, setIsNewCollection] = useState(false);
 
   // Search/Filter states inside tabs
   const [productSearch, setProductSearch] = useState("");
@@ -363,22 +364,50 @@ export const AdminDashboardPage: React.FC = () => {
   const handleSaveCollection = async () => {
     if (!editingCollection) return;
     try {
-      const response = await fetchWithAuth(`/api/admin/collections/${editingCollection.id}`, {
-        method: "PUT",
+      const url = isNewCollection 
+        ? "/api/admin/collections" 
+        : `/api/admin/collections/${editingCollection.id}`;
+      const method = isNewCollection ? "POST" : "PUT";
+
+      const response = await fetchWithAuth(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editingCollection)
       });
       if (response.ok) {
-        const updated = await response.json();
-        setCollections(prev => prev.map(c => c.id === updated.id ? updated : c));
+        const saved = await response.json();
+        if (isNewCollection) {
+          setCollections(prev => [...prev, saved]);
+        } else {
+          setCollections(prev => prev.map(c => c.id === saved.id ? saved : c));
+        }
         setIsCollectionModalOpen(false);
         setEditingCollection(null);
       } else {
-        alert("Ocurrió un error al guardar la colección.");
+        const errData = await response.json().catch(() => ({}));
+        alert(`Ocurrió un error al guardar la colección: ${errData.error || "Error desconocido"}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save collection:", err);
       alert("Error de conexión al guardar la colección.");
+    }
+  };
+
+  const handleDeleteCollection = async (id: string) => {
+    if (!window.confirm("¿Estás seguro de que querés eliminar esta línea de negocio? Esta acción no se puede deshacer y desvinculará los productos que pertenezcan a ella.")) return;
+    try {
+      const response = await fetchWithAuth(`/api/admin/collections/${id}`, {
+        method: "DELETE"
+      });
+      if (response.ok) {
+        setCollections(prev => prev.filter(c => c.id !== id));
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        alert(`Ocurrió un error al eliminar la colección: ${errData.error || "Error desconocido"}`);
+      }
+    } catch (err: any) {
+      console.error("Failed to delete collection:", err);
+      alert("Error de conexión al eliminar la colección.");
     }
   };
 
@@ -518,7 +547,7 @@ export const AdminDashboardPage: React.FC = () => {
           {[
             { id: "overview", label: "Panel de Control", icon: LayoutDashboard },
             { id: "products", label: "Gestionar Productos", icon: ShoppingBag },
-            { id: "collections", label: "Gestionar Colecciones", icon: Layers },
+            { id: "collections", label: "Líneas de Negocio", icon: Layers },
             { id: "orders", label: "Gestionar Pedidos", icon: Truck },
             { id: "customers", label: "Gestionar Clientes", icon: Users },
             { id: "support", label: "Servicio Técnico", icon: Hammer },
@@ -1047,9 +1076,29 @@ export const AdminDashboardPage: React.FC = () => {
             {/* ==================== PANEL 6: COLLECTIONS / CATEGORIES EDITOR ==================== */}
             {activeTab === "collections" && (
               <div className="space-y-4 animate-fade-in text-xs">
-                <div className="border-b border-border/30 pb-3">
-                  <h2 className="font-serif text-lg font-bold text-foreground">Gestión de Colecciones y Páginas</h2>
-                  <p className="text-muted-foreground text-[11px] mt-0.5">Modificá el contenido de las secciones principales de la tienda (Herramientas, Insumos, Capacitaciones, Merchandising) en tiempo real.</p>
+                <div className="border-b border-border/30 pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <h2 className="font-serif text-lg font-bold text-foreground">Gestión de Líneas de Negocio y Páginas</h2>
+                    <p className="text-muted-foreground text-[11px] mt-0.5">Modificá el contenido de las secciones principales de la tienda (Herramientas, Insumos, Capacitaciones, Merchandising) en tiempo real.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setIsNewCollection(true);
+                      setEditingCollection({
+                        id: "",
+                        name: "",
+                        subtitle: "",
+                        description: "",
+                        bg_url: "https://images.unsplash.com/photo-1547082299-de196ea013d6?w=400&auto=format&fit=crop&q=60",
+                        items_list: []
+                      });
+                      setIsCollectionModalOpen(true);
+                    }}
+                    className="px-3 py-2 bg-accent text-accent-foreground rounded-lg font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-1.5 self-start sm:self-center cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Nueva Línea</span>
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1075,9 +1124,17 @@ export const AdminDashboardPage: React.FC = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="p-3 bg-muted/40 border-t border-border/20 flex justify-end">
+                      <div className="p-3 bg-muted/40 border-t border-border/20 flex justify-between gap-2">
+                        <button
+                          onClick={() => handleDeleteCollection(col.id)}
+                          className="px-3 py-1.5 bg-muted hover:bg-rose-500/10 text-rose-400 border border-border hover:border-rose-500/20 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Eliminar</span>
+                        </button>
                         <button
                           onClick={() => {
+                            setIsNewCollection(false);
                             setEditingCollection({ ...col });
                             setIsCollectionModalOpen(true);
                           }}
@@ -1172,7 +1229,7 @@ export const AdminDashboardPage: React.FC = () => {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="font-semibold text-foreground">Colección</label>
+                  <label className="font-semibold text-foreground">Línea de Negocio</label>
                   <select
                     value={editingProduct.collection || ""}
                     onChange={(e) => setEditingProduct(prev => prev ? { ...prev, collection: e.target.value || undefined } : null)}
@@ -1337,6 +1394,105 @@ export const AdminDashboardPage: React.FC = () => {
                 className="w-full h-11 bg-accent text-accent-foreground font-serif font-bold uppercase tracking-widest rounded-lg hover:bg-accent/90 transition-colors cursor-pointer"
               >
                 Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== SUB-MODAL: COLLECTION CREATION & EDITION ==================== */}
+      {isCollectionModalOpen && editingCollection && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-card border border-border w-full max-w-lg rounded-xl shadow-2xl p-6 space-y-4 animate-scale-up my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/30 pb-2">
+              <h3 className="font-serif font-bold text-base text-foreground">
+                {isNewCollection ? "Nueva Línea de Negocio" : "Editar Línea de Negocio"}
+              </h3>
+              <button 
+                onClick={() => {
+                  setIsCollectionModalOpen(false);
+                  setEditingCollection(null);
+                }}
+                className="p-1 text-muted-foreground hover:text-foreground rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveCollection(); }} className="space-y-4 text-xs">
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Identificador único (ID en minúsculas) *</label>
+                <input
+                  type="text"
+                  required
+                  disabled={!isNewCollection}
+                  placeholder="Ej: herramientas"
+                  value={editingCollection.id || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                    setEditingCollection(prev => prev ? { ...prev, id: val } : null);
+                  }}
+                  className="w-full bg-background border border-border rounded p-2 text-foreground disabled:opacity-50"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Nombre de la Línea *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej: Herramientas"
+                  value={editingCollection.name || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditingCollection(prev => {
+                      if (!prev) return null;
+                      const next = { ...prev, name: val };
+                      if (isNewCollection && !prev.id) {
+                        next.id = val.toLowerCase().replace(/[^a-z0-9-]/g, "");
+                      }
+                      return next;
+                    });
+                  }}
+                  className="w-full bg-background border border-border rounded p-2 text-foreground"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Subtítulo de Portada</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Equipos profesionales"
+                  value={editingCollection.subtitle || ""}
+                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, subtitle: e.target.value } : null)}
+                  className="w-full bg-background border border-border rounded p-2 text-foreground"
+                />
+              </div>
+
+              <ImageUploadSelector
+                label="Imagen de Portada / Banner"
+                value={editingCollection.bg_url || ""}
+                onChange={(val) => setEditingCollection(prev => prev ? { ...prev, bg_url: val } : null)}
+                placeholder="Pegar URL de la imagen de fondo de la sección..."
+              />
+
+              <div className="space-y-1.5">
+                <label className="font-semibold text-foreground">Descripción de la Sección *</label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Breve descripción de los productos de esta sección..."
+                  value={editingCollection.description || ""}
+                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, description: e.target.value } : null)}
+                  className="w-full bg-background border border-border rounded p-2 text-foreground resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full h-11 bg-accent text-accent-foreground font-serif font-bold uppercase tracking-widest rounded-lg hover:bg-accent/90 transition-colors cursor-pointer"
+              >
+                Guardar Línea
               </button>
             </form>
           </div>

@@ -196,52 +196,162 @@ export const LogoIconSVG: React.FC<{ className?: string; size?: number; glow?: b
 };
 
 /**
- * Official high-fidelity Dr Tecno brand logos in corresponding colors
+ * Ultra-lightweight vector brand shape outlines.
+ * Built with pure inline SVGs to avoid any heavy image assets or layout thrashing.
+ * Perfectly fluid and fast even on lower-end devices.
  */
-export const logoImages = {
-  cyan: "https://i.postimg.cc/c12bD5L3/Chat-GPT-Image-14-jul-2026-04-00-21-p-m.png",
-  green: "https://i.postimg.cc/cHVBc2B1/Chat-GPT-Image-14-jul-2026-04-06-08-p-m.png",
-  yellow: "https://i.postimg.cc/qq4z0GkR/Chat-GPT-Image-14-jul-2026-04-10-18-p-m.png",
-  pink: "https://i.postimg.cc/B6MGL5T7/Chat-GPT-Image-14-jul-2026-04-15-02-p-m.png"
+export const BrandShapeOutline: React.FC<{
+  shapeId: string;
+  color: string;
+  size?: number;
+  className?: string;
+}> = ({ shapeId, color, size = 100, className = "" }) => {
+  if (shapeId === "cyan") {
+    // 5-point Star
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        className={className}
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <polygon
+          points="50,10 62,37 91,37 68,54 77,81 50,65 23,81 32,54 9,37 38,37"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Subtle decorative inner dash star */}
+        <polygon
+          points="50,22 58,41 78,41 62,53 68,72 50,60 32,72 38,53 22,41 42,41"
+          stroke={color}
+          strokeWidth="1"
+          strokeDasharray="2 3"
+          opacity="0.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (shapeId === "green") {
+    // 3-pointed Y-sintonizador
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        className={className}
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Rounded Y connector outline using line paths */}
+        <path
+          d="M 50,15 L 50,48 M 50,48 L 22,72 M 50,48 L 78,72"
+          stroke={color}
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Double-line tech-aesthetic outline detail */}
+        <path
+          d="M 50,10 L 50,48 M 50,48 L 17,76 M 50,48 L 83,76"
+          stroke={color}
+          strokeWidth="1.2"
+          strokeDasharray="4 4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.7"
+        />
+      </svg>
+    );
+  }
+
+  if (shapeId === "yellow") {
+    // Rounded Triangle with center core circle
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 100 100"
+        className={className}
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Geometric rounded triangle */}
+        <path
+          d="M 50,12 L 88,78 C 90,81 88,85 84,85 L 16,85 C 12,85 10,81 12,78 Z"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* Inner circular core */}
+        <circle
+          cx="50"
+          cy="56"
+          r="15"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <circle
+          cx="50"
+          cy="56"
+          r="9"
+          stroke={color}
+          strokeWidth="1"
+          strokeDasharray="2 2"
+          opacity="0.6"
+        />
+      </svg>
+    );
+  }
+
+  // default to pink: 6-pointed star / Hexagon shape
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M 50,10 L 62,31 L 86,31 L 73,51 L 85,72 L 61,72 L 50,93 L 39,72 L 15,72 L 27,51 L 14,31 L 38,31 Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Decorative center hexagon core */}
+      <polygon
+        points="50,38 60,44 60,56 50,62 40,56 40,44"
+        stroke={color}
+        strokeWidth="1"
+        strokeDasharray="1 2"
+        opacity="0.5"
+      />
+    </svg>
+  );
 };
 
 interface BrandShape {
   id: string;
-  url: string;
   color: string;
-  glowColor: string;
   label: string;
 }
 
 const BRAND_SHAPES: BrandShape[] = [
-  {
-    id: "cyan",
-    url: logoImages.cyan,
-    color: colors.cyan,
-    glowColor: "rgba(23, 203, 224, 0.8)",
-    label: "Portal Estrella"
-  },
-  {
-    id: "green",
-    url: logoImages.green,
-    color: colors.green,
-    glowColor: "rgba(55, 206, 127, 0.8)",
-    label: "Portal Y-Sintonizador"
-  },
-  {
-    id: "yellow",
-    url: logoImages.yellow,
-    color: colors.yellow,
-    glowColor: "rgba(255, 208, 40, 0.8)",
-    label: "Portal Triángulo Núcleo"
-  },
-  {
-    id: "pink",
-    url: logoImages.pink,
-    color: colors.pink,
-    glowColor: "rgba(237, 78, 157, 0.8)",
-    label: "Portal Hexágono"
-  }
+  { id: "cyan", color: colors.cyan, label: "Estrella Línea" },
+  { id: "green", color: colors.green, label: "Sintonizador Y" },
+  { id: "yellow", color: colors.yellow, label: "Triángulo Núcleo" },
+  { id: "pink", color: colors.pink, label: "Hexágono Línea" }
 ];
 
 /**
@@ -267,7 +377,7 @@ export const PageTransitionOverlay: React.FC = () => {
 
     const timer = setTimeout(() => {
       setIsTransitioning(false);
-    }, 1500); // 1.5s total duration for a fully-immersive zoom
+    }, 400); // Super-snappy 400ms transition (1/3 of 1.2s)
 
     return () => clearTimeout(timer);
   }, [path]);
@@ -277,7 +387,7 @@ export const PageTransitionOverlay: React.FC = () => {
     initial: { opacity: 0 },
     animate: { 
       opacity: [0, 1, 1, 0],
-      transition: { duration: 1.5, times: [0, 0.15, 0.85, 1], ease: "easeInOut" }
+      transition: { duration: 0.4, times: [0, 0.15, 0.85, 1], ease: "easeInOut" }
     }
   };
 
@@ -291,55 +401,38 @@ export const PageTransitionOverlay: React.FC = () => {
           animate="animate"
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#050608] overflow-hidden select-none pointer-events-auto"
         >
-          {/* Cyber grid pattern matching the portal color */}
-          <div 
-            className="absolute inset-0 opacity-[0.06] transition-colors duration-500 pointer-events-none"
-            style={{
-              backgroundImage: `linear-gradient(${selectedShape.color} 1px, transparent 1px), linear-gradient(90deg, ${selectedShape.color} 1px, transparent 1px)`,
-              backgroundSize: '32px 32px'
-            }}
-          />
+          {/* Subtle tech outline corner framing indicators */}
+          <div className="absolute top-8 left-8 border-t border-l w-12 h-12 opacity-20" style={{ borderColor: selectedShape.color }} />
+          <div className="absolute top-8 right-8 border-t border-r w-12 h-12 opacity-20" style={{ borderColor: selectedShape.color }} />
+          <div className="absolute bottom-8 left-8 border-b border-l w-12 h-12 opacity-20" style={{ borderColor: selectedShape.color }} />
+          <div className="absolute bottom-8 right-8 border-b border-r w-12 h-12 opacity-20" style={{ borderColor: selectedShape.color }} />
 
-          {/* Radial depth light gradient behind the portal */}
-          <div 
-            className="absolute inset-0 opacity-40 transition-all duration-700 pointer-events-none"
-            style={{
-              background: `radial-gradient(circle, ${selectedShape.glowColor} 0%, rgba(0,0,0,0) 70%)`
-            }}
-          />
-
-          {/* 4 Concentric Zooming Frames for highly detailed depth tunnel effect */}
-          {[0, 1, 2, 3].map((index) => {
-            // Configure delays to sequence the tunnel
-            const delay = index * 0.12;
+          {/* 3 Concentric Zooming Line Frames for a lightweight 3D tunnel effect */}
+          {[0, 1, 2].map((index) => {
+            const delay = index * 0.03;
             
-            // Zoom Direction Variants
+            // Zoom Ranges: smooth exponential hardware-accelerated scales
             const scaleRange = zoomDirection === "out" 
-              ? [0.1, 1 + index * 0.5, 3 + index * 1.5, 12] 
-              : [12, 3 + index * 1.5, 1 + index * 0.5, 0];
+              ? [0.15, 1.2 + index * 0.6, 4.5 + index * 2, 16] 
+              : [16, 4.5 + index * 2, 1.2 + index * 0.6, 0];
 
             const opacityRange = zoomDirection === "out"
               ? [0, 0.8, 0.4, 0]
               : [0, 0.4, 0.8, 0];
 
-            const rotateRange = zoomDirection === "out"
-              ? [index * 15, index * 30 + 45, index * 45 + 90, index * 60 + 180]
-              : [index * 60 + 180, index * 45 + 90, index * 30 + 45, index * 15];
-
             return (
               <motion.div
                 key={`tunnel-layer-${index}`}
-                initial={{ scale: scaleRange[0], opacity: 0, rotate: rotateRange[0] }}
+                initial={{ scale: scaleRange[0], opacity: 0 }}
                 animate={{
                   scale: scaleRange,
-                  opacity: opacityRange,
-                  rotate: rotateRange
+                  opacity: opacityRange
                 }}
                 transition={{
-                  duration: 1.25,
+                  duration: 0.33,
                   delay: delay,
                   ease: "easeInOut",
-                  times: [0, 0.3, 0.75, 1]
+                  times: [0, 0.35, 0.75, 1]
                 }}
                 className="absolute flex items-center justify-center pointer-events-none"
                 style={{
@@ -347,89 +440,47 @@ export const PageTransitionOverlay: React.FC = () => {
                   height: "280px"
                 }}
               >
-                {/* Holographic Glowing SVG circular border */}
+                {/* Clean inline SVG circular layout */}
                 <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
                   <circle 
                     cx="50" 
                     cy="50" 
                     r="47" 
                     stroke={selectedShape.color} 
-                    strokeWidth="1.2" 
+                    strokeWidth="0.8" 
                     fill="none" 
-                    strokeDasharray="4 8 12 8"
-                    opacity={0.8 - index * 0.15}
-                  />
-                  <circle 
-                    cx="50" 
-                    cy="50" 
-                    r="43" 
-                    stroke={selectedShape.color} 
-                    strokeWidth="0.6" 
-                    fill="none" 
-                    strokeDasharray="15 5"
-                    opacity={0.4 - index * 0.1}
+                    strokeDasharray="2 6"
+                    opacity={0.6 - index * 0.15}
                   />
                 </svg>
 
-                {/* The Brand Image acting as the frame */}
-                <div 
-                  className="relative w-48 h-48 flex items-center justify-center"
-                  style={{
-                    filter: `drop-shadow(0 0 ${20 - index * 4}px ${selectedShape.color})`
-                  }}
-                >
-                  <img
-                    src={selectedShape.url}
-                    alt={selectedShape.label}
-                    className="w-full h-full object-contain"
-                    referrerPolicy="no-referrer"
-                  />
-                  
-                  {/* Internal tech guidelines mapping the portal border */}
-                  <div 
-                    className="absolute inset-0 border-2 rounded-full pointer-events-none opacity-45"
-                    style={{ 
-                      borderColor: selectedShape.color,
-                      boxShadow: `0 0 12px ${selectedShape.color}, inset 0 0 12px ${selectedShape.color}`
-                    }}
+                {/* Lightweight Vector Shape Outline */}
+                <div className="relative w-44 h-44 flex items-center justify-center">
+                  <BrandShapeOutline
+                    shapeId={selectedShape.id}
+                    color={selectedShape.color}
+                    size={160}
                   />
                 </div>
               </motion.div>
             );
           })}
 
-          {/* Central Core Portal Light */}
-          <motion.div
-            initial={{ scale: 0.2, opacity: 0 }}
-            animate={{ 
-              scale: zoomDirection === "out" ? [0.2, 1.8, 4, 15] : [15, 4, 1, 0],
-              opacity: [0, 1, 1, 0]
-            }}
-            transition={{ duration: 1.4, ease: "easeInOut" }}
-            className="absolute w-24 h-24 rounded-full filter blur-xl mix-blend-screen pointer-events-none"
-            style={{ backgroundColor: selectedShape.color }}
-          />
-
           {/* HUD Tech Status Label */}
-          <div className="absolute bottom-16 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2">
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center">
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="px-4 py-1.5 rounded-full border bg-black/80 backdrop-blur-md flex items-center gap-2.5 font-mono text-[10px] tracking-wider uppercase"
-              style={{ 
-                borderColor: `${selectedShape.color}33`,
-                boxShadow: `0 0 15px ${selectedShape.color}15`
-              }}
+              transition={{ delay: 0.15 }}
+              className="px-3.5 py-1 rounded-md border bg-black/40 backdrop-blur-sm flex items-center gap-2 font-mono text-[9px] tracking-widest text-muted-foreground uppercase"
+              style={{ borderColor: `${selectedShape.color}22` }}
             >
-              <span className="w-1.5 h-1.5 rounded-full animate-ping" style={{ backgroundColor: selectedShape.color }} />
-              <span style={{ color: selectedShape.color }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedShape.color }} />
+              <span style={{ color: selectedShape.color }} className="font-bold">
                 {selectedShape.label}
               </span>
-              <span className="text-muted-foreground">|</span>
-              <span className="text-white font-bold">
-                ZOOM {zoomDirection === "out" ? "OUT" : "IN"}
-              </span>
+              <span>•</span>
+              <span>ZOOM {zoomDirection === "out" ? "OUT" : "IN"}</span>
             </motion.div>
           </div>
         </motion.div>
@@ -458,7 +509,7 @@ export const LocalLogoTransition: React.FC<{ triggerKey: string }> = ({ triggerK
       const timer = setTimeout(() => {
         setIsTransitioning(false);
         setPrevKey(triggerKey);
-      }, 750); // Snappy 0.75s local zoom transition
+      }, 200); // Snap 0.2s local zoom transition
 
       return () => clearTimeout(timer);
     }
@@ -470,48 +521,29 @@ export const LocalLogoTransition: React.FC<{ triggerKey: string }> = ({ triggerK
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 1, 0] }}
-          transition={{ duration: 0.75, times: [0, 0.15, 0.85, 1] }}
-          className="absolute inset-0 z-40 flex items-center justify-center bg-background/95 backdrop-blur-sm pointer-events-none overflow-hidden rounded-xl"
+          transition={{ duration: 0.2, times: [0, 0.15, 0.85, 1] }}
+          className="absolute inset-0 z-40 flex items-center justify-center bg-[#050608]/90 backdrop-blur-[2px] pointer-events-none overflow-hidden rounded-xl"
         >
           {/* Zoom frame portal layer */}
           <motion.div
-            initial={{ scale: 0.1, rotate: -45, opacity: 0 }}
+            initial={{ scale: 0.15, opacity: 0 }}
             animate={{
-              scale: [0.1, 1.2, 2.5, 6],
-              rotate: [-45, 15, 45, 90],
-              opacity: [0, 1, 0.8, 0]
+              scale: [0.15, 1.4, 4],
+              opacity: [0, 1, 0]
             }}
             transition={{
-              duration: 0.7,
+              duration: 0.18,
               ease: "easeInOut",
-              times: [0, 0.4, 0.75, 1]
+              times: [0, 0.45, 1]
             }}
-            className="w-32 h-32 flex items-center justify-center"
-            style={{
-              filter: `drop-shadow(0 0 15px ${selectedShape.color})`
-            }}
+            className="w-24 h-24 flex items-center justify-center"
           >
-            <img
-              src={selectedShape.url}
-              alt="Local Transition Shape"
-              className="w-full h-full object-contain"
-              referrerPolicy="no-referrer"
-            />
-            {/* Outline ring */}
-            <div 
-              className="absolute inset-0 border border-dashed rounded-full"
-              style={{ borderColor: selectedShape.color }}
+            <BrandShapeOutline
+              shapeId={selectedShape.id}
+              color={selectedShape.color}
+              size={90}
             />
           </motion.div>
-          
-          {/* Subtle colored flash */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 0.3, 0] }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0 pointer-events-none"
-            style={{ backgroundColor: `${selectedShape.color}15` }}
-          />
         </motion.div>
       )}
     </AnimatePresence>

@@ -317,6 +317,8 @@ export interface DbInterface {
   getCollections(): Promise<Collection[]>;
   getCollectionById(id: string): Promise<Collection | null>;
   updateCollection(id: string, data: Partial<Collection>): Promise<Collection>;
+  createCollection(data: Omit<Collection, "id"> & { id?: string }): Promise<Collection>;
+  deleteCollection(id: string): Promise<boolean>;
 
   // Products
   getProducts(filters?: {
@@ -861,6 +863,36 @@ class LocalJsonDb implements DbInterface {
     return this.data.collections[idx];
   }
 
+  async createCollection(data: Omit<Collection, "id"> & { id?: string }): Promise<Collection> {
+    if (!this.data.collections) this.data.collections = [...INITIAL_COLLECTIONS];
+    const id = data.id || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const existing = this.data.collections.find(c => c.id === id);
+    if (existing) throw new Error("Ya existe una colección con ese ID");
+    
+    const newCol: Collection = {
+      id,
+      name: data.name,
+      subtitle: data.subtitle || "",
+      description: data.description || "",
+      bg_url: data.bg_url || "",
+      items_list: data.items_list || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    this.data.collections.push(newCol);
+    this.write();
+    return newCol;
+  }
+
+  async deleteCollection(id: string): Promise<boolean> {
+    if (!this.data.collections) this.data.collections = [...INITIAL_COLLECTIONS];
+    const idx = this.data.collections.findIndex(c => c.id === id);
+    if (idx === -1) return false;
+    this.data.collections.splice(idx, 1);
+    this.write();
+    return true;
+  }
+
   async verifyAdmin(username: string, passwordHash: string): Promise<boolean> {
     const admin = this.data.admin_users.find(
       (a) => a.username.toLowerCase() === username.toLowerCase() && a.password_hash === passwordHash
@@ -989,6 +1021,60 @@ class SupabaseDb implements DbInterface {
         updated_at: new Date().toISOString()
       } as Collection;
       return this.fallbackCollections[idx];
+    }
+  }
+
+  async createCollection(data: Omit<Collection, "id"> & { id?: string }): Promise<Collection> {
+    const id = data.id || data.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const newCol: Collection = {
+      id,
+      name: data.name,
+      subtitle: data.subtitle || "",
+      description: data.description || "",
+      bg_url: data.bg_url || "",
+      items_list: data.items_list || [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    try {
+      const payload = {
+        ...newCol,
+        items_list: JSON.stringify(newCol.items_list) as any
+      };
+      const { data: inserted, error } = await this.client
+        .from("collections")
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+      return {
+        ...inserted,
+        items_list: typeof inserted.items_list === "string" ? JSON.parse(inserted.items_list) : inserted.items_list
+      };
+    } catch (err: any) {
+      console.warn("⚠️ 'collections' table insert fallback:", err.message);
+      const existing = this.fallbackCollections.find(c => c.id === id);
+      if (existing) throw new Error("Ya existe una colección con ese ID");
+      this.fallbackCollections.push(newCol);
+      return newCol;
+    }
+  }
+
+  async deleteCollection(id: string): Promise<boolean> {
+    try {
+      const { error } = await this.client
+        .from("collections")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      return true;
+    } catch (err: any) {
+      console.warn("⚠️ 'collections' table delete fallback:", err.message);
+      const idx = this.fallbackCollections.findIndex(c => c.id === id);
+      if (idx === -1) return false;
+      this.fallbackCollections.splice(idx, 1);
+      return true;
     }
   }
 

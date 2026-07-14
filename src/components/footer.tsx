@@ -70,7 +70,7 @@ export const Footer: React.FC = () => {
             {[
               { label: "Página de Inicio", dest: "/" },
               { label: "Catálogo General", dest: "/catalogo" },
-              { label: "Colecciones Especiales", dest: "/colecciones" },
+              { label: "Servicios y Productos", dest: "/colecciones" },
               { label: "Asistente Inteligente (Quiz)", dest: "/quiz" },
               { label: "Servicio Técnico Oficial", dest: "/servicio-tecnico" },
               { label: "Sobre Nosotros", dest: "/sobre-nosotros" },

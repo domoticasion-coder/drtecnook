@@ -91,7 +91,7 @@ export const CollectionsPage: React.FC = () => {
       {/* Page Header */}
       <div className="border-b border-border/40 pb-4 text-center max-w-xl mx-auto space-y-2" id="collections-header">
         <span className="text-[10px] font-serif uppercase tracking-widest text-accent font-bold">Líneas de Negocio</span>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">Colecciones Dr Tecno</h1>
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-foreground">Servicios y Productos</h1>
         <p className="text-xs text-muted-foreground leading-relaxed">
           Explorá nuestras áreas especializadas. Ofrecemos herramientas de nivel profesional, insumos y módulos certificados de primera calidad, las capacitaciones técnicas más completas del mercado y merchandising oficial de taller.
         </p>
@@ -100,7 +100,7 @@ export const CollectionsPage: React.FC = () => {
       {loading && (
         <div className="flex items-center justify-center py-12 text-xs text-muted-foreground gap-2">
           <div className="w-4 h-4 border border-accent border-t-transparent rounded-full animate-spin" />
-          <span>Cargando colecciones actualizadas...</span>
+          <span>Cargando servicios y productos actualizados...</span>
         </div>
       )}
 
@@ -172,7 +172,7 @@ export const CollectionsPage: React.FC = () => {
                     onClick={() => navigate(`/catalogo?collection=${col.id}`)}
                     className="px-5 py-2.5 bg-accent text-accent-foreground text-xs font-serif font-bold tracking-widest uppercase rounded-lg hover:bg-accent/90 transition-all flex items-center gap-2 group cursor-pointer"
                   >
-                    <span>Ver Colección</span>
+                    <span>Explorar Línea</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>

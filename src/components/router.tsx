@@ -20,7 +20,9 @@ export const Router: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   const navigate = (newPath: string) => {
     window.history.pushState(null, "", newPath);
-    setPath(newPath);
+    // Extract only the pathname portion for local route matching
+    const pathname = newPath.split("?")[0].split("#")[0];
+    setPath(pathname);
     // Scroll smoothly to top on navigation
     window.scrollTo({ top: 0, behavior: "instant" });
   };

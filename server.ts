@@ -606,6 +606,31 @@ app.put("/api/admin/collections/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// Admin Collections CRUD: Create
+app.post("/api/admin/collections", requireAdmin, async (req, res) => {
+  try {
+    const created = await db.createCollection(req.body);
+    res.status(201).json(created);
+  } catch (error: any) {
+    console.error("Error creating collection:", error);
+    res.status(500).json({ error: error.message || "Error al crear la colección" });
+  }
+});
+
+// Admin Collections CRUD: Delete
+app.delete("/api/admin/collections/:id", requireAdmin, async (req, res) => {
+  try {
+    const success = await db.deleteCollection(req.params.id);
+    if (!success) {
+      return res.status(404).json({ error: "Colección no encontrada" });
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("Error deleting collection:", error);
+    res.status(500).json({ error: "Error al eliminar la colección" });
+  }
+});
+
 
 // ==================== VITE AND STATIC ASSETS HANDLING ====================
 

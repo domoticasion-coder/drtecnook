@@ -13,7 +13,7 @@ export const Navigation: React.FC = () => {
   const links = [
     { label: "Inicio", path: "/" },
     { label: "Catálogo", path: "/catalogo" },
-    { label: "Colecciones", path: "/colecciones" },
+    { label: "Servicios y Productos", path: "/colecciones" },
     { label: "Servicio Técnico", path: "/servicio-tecnico" },
     { label: "Sobre Nosotros", path: "/sobre-nosotros" },
     { label: "Contacto", path: "/contacto" },

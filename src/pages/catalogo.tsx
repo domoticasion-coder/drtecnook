@@ -6,7 +6,7 @@ import { Product } from "../types.js";
 
 const CATEGORIES = ["Todos", "Herramientas", "Insumos", "Capacitaciones", "Merchandising"];
 const COLLECTIONS = [
-  { id: "all", label: "Todas las Colecciones" },
+  { id: "all", label: "Todas las Líneas" },
   { id: "herramientas", label: "Herramientas de Precisión" },
   { id: "insumos", label: "Insumos & Repuestos" },
   { id: "capacitaciones", label: "Capacitaciones Profesionales" },
@@ -176,7 +176,7 @@ export const CatalogPage: React.FC = () => {
 
           {/* Collection */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-foreground">Colección</label>
+            <label className="text-xs font-semibold text-foreground">Línea de Negocio</label>
             <div className="flex flex-col gap-1">
               {COLLECTIONS.map((col) => (
                 <button
@@ -298,7 +298,7 @@ export const CatalogPage: React.FC = () => {
 
               {/* Mobile Collection Select */}
               <div className="space-y-1">
-                <label className="text-[11px] font-medium">Colección</label>
+                <label className="text-[11px] font-medium">Línea de Negocio</label>
                 <select
                   value={collection}
                   onChange={(e) => setCollection(e.target.value)}
