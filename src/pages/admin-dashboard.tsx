@@ -5,6 +5,56 @@ import {
   SlidersHorizontal, RefreshCw, Landmark, Cpu, Hammer, Heart, Eye, Layers 
 } from "lucide-react";
 import { Product, Order, Customer, ServiceRequest, Collection } from "../types.js";
+import { LocalLogoTransition } from "../components/logo-transition.js";
+import { ImageUploadSelector } from "../components/image-upload-selector.js";
+
+interface ServiceRequestMetadata {
+  physical_received: boolean;
+  received_image?: string;
+  repaired_image?: string;
+  diagnosis_history?: Array<{
+    date: string;
+    text: string;
+    image?: string;
+  }>;
+  plain_notes?: string;
+}
+
+function parseServiceMetadata(internalNotes: string | null | undefined): ServiceRequestMetadata {
+  if (!internalNotes) {
+    return {
+      physical_received: false,
+      received_image: "",
+      repaired_image: "",
+      diagnosis_history: [],
+      plain_notes: ""
+    };
+  }
+  
+  const trimmed = internalNotes.trim();
+  if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return {
+        physical_received: !!parsed.physical_received,
+        received_image: parsed.received_image || "",
+        repaired_image: parsed.repaired_image || "",
+        diagnosis_history: parsed.diagnosis_history || [],
+        plain_notes: parsed.plain_notes || ""
+      };
+    } catch (e) {
+      // treat as plain text
+    }
+  }
+  
+  return {
+    physical_received: false,
+    received_image: "",
+    repaired_image: "",
+    diagnosis_history: [],
+    plain_notes: internalNotes
+  };
+}
 
 interface DashboardStats {
   totalProducts: number;
@@ -53,6 +103,11 @@ export const AdminDashboardPage: React.FC = () => {
   // Edit/Create Product Modal state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Partial<Product> | null>(null);
+
+  // Technical Support management states
+  const [selectedServiceRequest, setSelectedServiceRequest] = useState<ServiceRequest | null>(null);
+  const [newLogText, setNewLogText] = useState("");
+  const [newLogImage, setNewLogImage] = useState("");
 
   // Specifications builder helper
   const [specKey, setSpecKey] = useState("");
@@ -192,11 +247,42 @@ export const AdminDashboardPage: React.FC = () => {
       });
       if (response.ok) {
         const resp = await fetchWithAuth("/api/admin/service-requests");
-        if (resp.ok) setServiceRequests(await resp.json());
+        if (resp.ok) {
+          const list: ServiceRequest[] = await resp.json();
+          setServiceRequests(list);
+          if (selectedServiceRequest && selectedServiceRequest.id === id) {
+            const updated = list.find(r => r.id === id);
+            if (updated) setSelectedServiceRequest(updated);
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to update service request:", err);
     }
+  };
+
+  const handleSaveServiceMetadata = async (
+    updatedMetadata: Partial<ServiceRequestMetadata>,
+    newStatus?: string
+  ) => {
+    if (!selectedServiceRequest) return;
+    const currentMetadata = parseServiceMetadata(selectedServiceRequest.internal_notes);
+    const finalMetadata: ServiceRequestMetadata = {
+      physical_received: updatedMetadata.physical_received !== undefined ? updatedMetadata.physical_received : currentMetadata.physical_received,
+      received_image: updatedMetadata.received_image !== undefined ? updatedMetadata.received_image : currentMetadata.received_image,
+      repaired_image: updatedMetadata.repaired_image !== undefined ? updatedMetadata.repaired_image : currentMetadata.repaired_image,
+      diagnosis_history: updatedMetadata.diagnosis_history !== undefined ? updatedMetadata.diagnosis_history : currentMetadata.diagnosis_history,
+      plain_notes: updatedMetadata.plain_notes !== undefined ? updatedMetadata.plain_notes : currentMetadata.plain_notes
+    };
+
+    const payload: Partial<ServiceRequest> = {
+      internal_notes: JSON.stringify(finalMetadata)
+    };
+    if (newStatus) {
+      payload.status = newStatus as any;
+    }
+
+    await handleUpdateServiceRequest(selectedServiceRequest.id, payload);
   };
 
   // Delete product action
@@ -406,19 +492,29 @@ export const AdminDashboardPage: React.FC = () => {
       
       {/* ==================== ADMIN NAVIGATION SIDEBAR ==================== */}
       <aside className="w-full lg:w-64 bg-card border border-border/60 rounded-xl p-4 space-y-4 shrink-0">
-        <div className="border-b border-border/30 pb-3 flex flex-col gap-2">
-          <img 
-            src="https://i.postimg.cc/ry7vnvRP/Chat-GPT-Image-13-jul-2026-06-16-55-p-m.png" 
-            alt="Dr Tecno Logo" 
-            className="h-8 w-auto object-contain self-start"
-            referrerPolicy="no-referrer"
-          />
-          <div>
-            <span className="text-[10px] text-accent font-mono block">Control Panel ({username})</span>
+        <div className="border-b border-border/30 pb-3 flex flex-row lg:flex-col justify-between lg:justify-start items-center lg:items-start gap-2">
+          <div className="flex items-center lg:items-start gap-2 lg:flex-col">
+            <img 
+              src="https://i.postimg.cc/ry7vnvRP/Chat-GPT-Image-13-jul-2026-06-16-55-p-m.png" 
+              alt="Dr Tecno Logo" 
+              className="h-7 sm:h-8 w-auto object-contain"
+              referrerPolicy="no-referrer"
+            />
+            <div>
+              <span className="text-[10px] text-accent font-mono block">Control Panel ({username})</span>
+            </div>
           </div>
+          {/* Logout button displayed on mobile inside header, hidden on desktop */}
+          <button
+            onClick={handleLogout}
+            className="flex lg:hidden items-center gap-1.5 px-2.5 py-1.5 bg-rose-950/20 hover:bg-rose-950/40 border border-rose-500/25 text-rose-400 rounded-lg text-[10px] font-semibold cursor-pointer transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Salir</span>
+          </button>
         </div>
 
-        <nav className="flex flex-col gap-1 text-xs">
+        <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-visible gap-1.5 pb-2 lg:pb-0 text-xs scrollbar-thin scrollbar-thumb-accent/20 scrollbar-track-transparent">
           {[
             { id: "overview", label: "Panel de Control", icon: LayoutDashboard },
             { id: "products", label: "Gestionar Productos", icon: ShoppingBag },
@@ -433,9 +529,9 @@ export const AdminDashboardPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-3 py-2 sm:py-2.5 rounded-lg text-left transition-all cursor-pointer shrink-0 ${
                   isActive 
-                    ? "bg-accent/10 text-accent font-medium border-l-2 border-accent pl-3" 
+                    ? "bg-accent/10 text-accent font-medium border-b-2 lg:border-b-0 lg:border-l-2 border-accent px-3" 
                     : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 }`}
               >
@@ -446,10 +542,10 @@ export const AdminDashboardPage: React.FC = () => {
           })}
         </nav>
 
-        <div className="border-t border-border/30 pt-3">
+        <div className="hidden lg:block border-t border-border/30 pt-3">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg text-left text-xs font-semibold cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-rose-400 hover:bg-rose-500/10 rounded-lg text-left text-xs font-semibold cursor-pointer transition-all"
           >
             <LogOut className="w-4 h-4" />
             <span>Cerrar Sesión</span>
@@ -458,7 +554,8 @@ export const AdminDashboardPage: React.FC = () => {
       </aside>
 
       {/* ==================== ADMIN TAB PANELS CONTENT ==================== */}
-      <main className="flex-1 w-full bg-card/20 border border-border/45 rounded-xl p-5 sm:p-6 min-h-[500px]">
+      <main className="flex-1 w-full bg-card/20 border border-border/45 rounded-xl p-5 sm:p-6 min-h-[500px] relative overflow-hidden">
+        <LocalLogoTransition triggerKey={activeTab} />
         {loadingData && (
           <div className="flex items-center justify-center h-48 text-xs text-muted-foreground gap-2">
             <div className="w-4 h-4 border border-accent border-t-transparent rounded-full animate-spin" />
@@ -904,30 +1001,39 @@ export const AdminDashboardPage: React.FC = () => {
                             </td>
                             <td className="p-3">
                               <p className="font-semibold text-foreground">{req.customer_name}</p>
-                              <p className="text-[10px] text-muted-foreground">{req.phone}</p>
+                              {req.customer_dni && (
+                                <p className="text-[10px] text-foreground/80 font-mono font-medium">DNI: {req.customer_dni}</p>
+                              )}
+                              <p className="text-[10px] text-muted-foreground">Tel: {req.phone}</p>
                             </td>
                             <td className="p-3">
                               <p className="truncate max-w-[150px] italic">"{req.problem_description}"</p>
                               {req.internal_notes && <p className="text-[10px] text-accent font-semibold mt-1">Notas: {req.internal_notes}</p>}
                             </td>
-                            <td className="p-3 text-right space-y-1.5">
-                              <select
-                                value={req.status}
-                                onChange={(e) => handleUpdateServiceRequest(req.id, { status: e.target.value as any })}
-                                className="bg-background border border-border rounded-md px-1.5 py-1 text-[11px] text-foreground outline-none focus:border-accent w-full max-w-[140px]"
-                              >
-                                {["Pendiente", "En diagnóstico", "Esperando aprobación", "En proceso", "Listo", "Entregado", "Cancelado"].map(st => (
-                                  <option key={st} value={st}>{st.toUpperCase()}</option>
-                                ))}
-                              </select>
-                              
-                              <input
-                                type="text"
-                                placeholder="Escribir nota de laboratorio..."
-                                defaultValue={req.internal_notes || ""}
-                                onBlur={(e) => handleUpdateServiceRequest(req.id, { internal_notes: e.target.value })}
-                                className="w-full max-w-[140px] bg-background border border-border rounded p-1 text-[10px] text-foreground"
-                              />
+                            <td className="p-3 text-right">
+                              <div className="flex flex-col items-end gap-1.5 justify-center">
+                                <select
+                                  value={req.status}
+                                  onChange={(e) => handleUpdateServiceRequest(req.id, { status: e.target.value as any })}
+                                  className="bg-background border border-border rounded-md px-1.5 py-1 text-[11px] text-foreground outline-none focus:border-accent w-full max-w-[140px]"
+                                >
+                                  {["Pendiente", "En diagnóstico", "Esperando aprobación", "En proceso", "Listo", "Entregado", "Cancelado"].map(st => (
+                                    <option key={st} value={st}>{st.toUpperCase()}</option>
+                                  ))}
+                                </select>
+                                
+                                <button
+                                  onClick={() => {
+                                    setSelectedServiceRequest(req);
+                                    setNewLogText("");
+                                    setNewLogImage("");
+                                  }}
+                                  className="w-full max-w-[140px] px-2 py-1 bg-accent text-accent-foreground font-semibold rounded hover:bg-accent/90 transition-colors flex items-center justify-center gap-1 text-[10px] cursor-pointer"
+                                >
+                                  <span>GESTIONAR ORDEN</span>
+                                  <Hammer className="w-3 h-3" />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -1125,16 +1231,12 @@ export const AdminDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground">Imagen URL principal</label>
-                <input
-                  type="url"
-                  value={editingProduct.image_url || ""}
-                  onChange={(e) => setEditingProduct(prev => prev ? { ...prev, image_url: e.target.value } : null)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-background border border-border rounded p-2 text-foreground"
-                />
-              </div>
+              <ImageUploadSelector
+                label="Imagen Principal del Producto"
+                value={editingProduct.image_url || ""}
+                onChange={(val) => setEditingProduct(prev => prev ? { ...prev, image_url: val } : null)}
+                placeholder="Pegar URL de la imagen del producto..."
+              />
 
               <div className="space-y-1.5">
                 <label className="font-semibold text-foreground">Descripción Corta *</label>
@@ -1241,85 +1343,275 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
-      {/* ==================== SUB-MODAL: COLLECTION EDITION ==================== */}
-      {isCollectionModalOpen && editingCollection && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-card border border-border w-full max-w-xl rounded-xl shadow-2xl p-6 space-y-4 animate-scale-up my-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-border/30 pb-2">
-              <h3 className="font-serif font-bold text-base text-foreground">
-                Personalizar Contenido: {editingCollection.name}
-              </h3>
-              <button 
-                onClick={() => {
-                  setIsCollectionModalOpen(false);
-                  setEditingCollection(null);
-                }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-5 h-5" />
-              </button>
+      {/* ==================== SUB-MODAL: TECHNICAL SERVICE ORDER MANAGEMENT ==================== */}
+      {selectedServiceRequest && (() => {
+        const metadata = parseServiceMetadata(selectedServiceRequest.internal_notes);
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md overflow-y-auto">
+            <div className="bg-card border border-border w-full max-w-2xl rounded-xl shadow-2xl p-6 space-y-5 animate-scale-up my-8 max-h-[92vh] overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-border/30 pb-3">
+                <div>
+                  <span className="text-[10px] text-accent font-mono uppercase tracking-widest">Servicio Técnico Dr Tecno</span>
+                  <h3 className="font-serif font-bold text-lg text-foreground flex items-center gap-1.5 mt-0.5">
+                    <Hammer className="w-5 h-5 text-accent" />
+                    <span>Gestionar Orden: {selectedServiceRequest.request_number}</span>
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => {
+                    setSelectedServiceRequest(null);
+                    setNewLogText("");
+                    setNewLogImage("");
+                  }}
+                  className="p-1 text-muted-foreground hover:text-foreground rounded"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Informative grid about client & device */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-3.5 bg-muted/40 border border-border/30 rounded-lg text-[11px] leading-normal">
+                <div>
+                  <span className="text-muted-foreground block font-mono text-[9px] uppercase font-bold">Cliente</span>
+                  <span className="font-bold text-foreground block">{selectedServiceRequest.customer_name}</span>
+                  {selectedServiceRequest.customer_dni && (
+                    <span className="text-muted-foreground font-mono block">DNI: {selectedServiceRequest.customer_dni}</span>
+                  )}
+                </div>
+                <div>
+                  <span className="text-muted-foreground block font-mono text-[9px] uppercase font-bold">Teléfono</span>
+                  <span className="text-foreground font-semibold block">{selectedServiceRequest.phone}</span>
+                  <span className="text-muted-foreground block">{selectedServiceRequest.email}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block font-mono text-[9px] uppercase font-bold">Dispositivo</span>
+                  <span className="font-bold text-accent block">{selectedServiceRequest.device_type}</span>
+                  <span className="text-muted-foreground block">{selectedServiceRequest.brand} {selectedServiceRequest.model}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block font-mono text-[9px] uppercase font-bold">Ingreso Registrado</span>
+                  <span className="text-foreground font-medium block">{new Date(selectedServiceRequest.created_at).toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {/* 1. Status and Physical Receipt Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="font-bold text-foreground block">Estado General de Reparación</label>
+                    <select
+                      value={selectedServiceRequest.status}
+                      onChange={(e) => handleUpdateServiceRequest(selectedServiceRequest.id, { status: e.target.value as any })}
+                      className="w-full bg-background border border-border rounded p-2 text-foreground font-medium outline-none focus:border-accent"
+                    >
+                      {["Pendiente", "En diagnóstico", "Esperando aprobación", "En proceso", "Listo", "Entregado", "Cancelado"].map(st => (
+                        <option key={st} value={st}>{st.toUpperCase()}</option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Define qué etapa de la reparación se le comunica al cliente online.</p>
+                  </div>
+
+                  <div className="space-y-1.5 flex flex-col justify-end">
+                    <label className="flex items-center gap-2 p-2 bg-background border border-border rounded-lg cursor-pointer hover:bg-muted/10 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={metadata.physical_received}
+                        onChange={(e) => handleSaveServiceMetadata({ physical_received: e.target.checked })}
+                        className="h-4.5 w-4.5 text-accent bg-background border-border rounded focus:ring-accent accent-accent cursor-pointer"
+                      />
+                      <div>
+                        <span className="font-bold text-foreground block text-[11px]">Equipo Recibido Físicamente</span>
+                        <span className="text-[9.5px] text-muted-foreground block leading-normal">Activa el cambio de etapa "Turno Registrado" a "Ingresado a Laboratorio".</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                {/* 2. Photo Reception Controls */}
+                <div className="border border-border/40 p-4 rounded-xl space-y-3 bg-muted/20">
+                  <ImageUploadSelector
+                    label="1. Llave de Recibido (Foto de Ingreso del Equipo)"
+                    value={metadata.received_image || ""}
+                    onChange={(val) => handleSaveServiceMetadata({ received_image: val })}
+                    placeholder="Pegar URL de la imagen de recepción..."
+                  />
+                  {/* Presets to quickly test photo upload */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[9px] text-muted-foreground uppercase font-mono mr-1">Test Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveServiceMetadata({ received_image: "https://images.unsplash.com/photo-1595115815610-ed609f7a9117?w=600" })}
+                      className="px-2 py-0.5 bg-background border border-border hover:border-accent text-foreground text-[10px] rounded transition-colors"
+                    >
+                      📱 Pantalla Rota
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveServiceMetadata({ received_image: "https://images.unsplash.com/photo-1601524909162-be87252be298?w=600" })}
+                      className="px-2 py-0.5 bg-background border border-border hover:border-accent text-foreground text-[10px] rounded transition-colors"
+                    >
+                      ⚡ Placa Dañada
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. History logs & Fallas Resolution */}
+                <div className="border border-border/40 p-4 rounded-xl space-y-4 bg-muted/20">
+                  <div className="flex justify-between items-center">
+                    <span className="font-serif font-bold text-xs text-foreground block">2. Historial del Arreglo (Diagnóstico y Trabajos)</span>
+                    <span className="text-[10px] font-mono text-accent">{metadata.diagnosis_history?.length || 0} Registros</span>
+                  </div>
+
+                  {/* List existing logs */}
+                  {metadata.diagnosis_history && metadata.diagnosis_history.length > 0 ? (
+                    <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
+                      {metadata.diagnosis_history.map((log, index) => (
+                        <div key={index} className="p-2.5 bg-background border border-border/60 rounded-lg flex gap-3 justify-between items-start">
+                          <div className="space-y-1 flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-[9px] font-mono">
+                              <span className="text-accent font-bold">{log.date}</span>
+                              <span className="text-muted-foreground">Log #{index + 1}</span>
+                            </div>
+                            <p className="text-[10.5px] text-foreground leading-relaxed font-sans">{log.text}</p>
+                            {log.image && (
+                              <div className="inline-block mt-1 border border-border/20 rounded overflow-hidden bg-black/10">
+                                <img src={log.image} alt="Log work preview" className="max-h-16 object-contain" referrerPolicy="no-referrer" />
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updatedLogs = [...metadata.diagnosis_history!];
+                              updatedLogs.splice(index, 1);
+                              handleSaveServiceMetadata({ diagnosis_history: updatedLogs });
+                            }}
+                            className="p-1 text-rose-400 hover:text-rose-500 hover:bg-rose-950/20 rounded transition-colors cursor-pointer shrink-0"
+                            title="Eliminar este registro"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground italic leading-relaxed">No hay registros cargados en el historial de reparación. El cliente verá la descripción de falla inicial.</p>
+                  )}
+
+                  {/* Form to add a new step log */}
+                  <div className="bg-background border border-border p-3 rounded-lg space-y-3">
+                    <span className="font-semibold text-foreground text-[10px] block uppercase tracking-wider">Agregar Avance de Trabajo:</span>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] text-muted-foreground font-semibold">Detalle del avance o diagnóstico realizado:</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: Se soldó el pin de carga nuevo y se probaron tensiones de entrada."
+                        value={newLogText}
+                        onChange={(e) => setNewLogText(e.target.value)}
+                        className="w-full bg-muted border border-border rounded p-2 text-foreground text-[11px]"
+                      />
+                    </div>
+
+                    <ImageUploadSelector
+                      label="Imagen del Trabajo en Curso (Opcional)"
+                      value={newLogImage}
+                      onChange={(val) => setNewLogImage(val)}
+                      placeholder="Pegar URL de foto de microscopio, soldadura..."
+                    />
+                    {/* Presets to quickly test process image */}
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      <span className="text-[9px] text-muted-foreground uppercase font-mono">Test Presets:</span>
+                      <button
+                        type="button"
+                        onClick={() => setNewLogImage("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600")}
+                        className="px-1.5 py-0.5 bg-background border border-border hover:border-accent text-foreground text-[9px] rounded"
+                      >
+                        🔬 Microscopio Placa
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewLogImage("https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600")}
+                        className="px-1.5 py-0.5 bg-background border border-border hover:border-accent text-foreground text-[9px] rounded"
+                      >
+                        🛠️ Osciloscopio/Técnico
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={!newLogText.trim()}
+                      onClick={async () => {
+                        const newLog = {
+                          date: new Date().toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }),
+                          text: newLogText.trim(),
+                          image: newLogImage.trim() || undefined
+                        };
+                        const updatedLogs = [...(metadata.diagnosis_history || []), newLog];
+                        await handleSaveServiceMetadata({ diagnosis_history: updatedLogs });
+                        setNewLogText("");
+                        setNewLogImage("");
+                      }}
+                      className="w-full py-1.5 bg-accent text-accent-foreground font-bold rounded hover:opacity-90 disabled:opacity-40 transition-colors text-[10.5px] cursor-pointer"
+                    >
+                      REGISTRAR AVANCE EN HISTORIAL
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Repaired Device photo */}
+                <div className="border border-border/40 p-4 rounded-xl space-y-3 bg-muted/20">
+                  <ImageUploadSelector
+                    label="3. Imagen del Dispositivo Terminado (Una vez reparado)"
+                    value={metadata.repaired_image || ""}
+                    onChange={(val) => handleSaveServiceMetadata({ repaired_image: val })}
+                    placeholder="Pegar URL de la imagen del equipo finalizado..."
+                  />
+                  {/* Preset to quickly test repaired image */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[9px] text-muted-foreground uppercase font-mono mr-1">Test Presets:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveServiceMetadata({ repaired_image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600" })}
+                      className="px-2 py-0.5 bg-background border border-border hover:border-accent text-foreground text-[10px] rounded transition-colors"
+                    >
+                      ✨ Equipo Reparado Impecable
+                    </button>
+                  </div>
+                </div>
+
+                {/* 5. Plain Notes Input (Fallback and general details) */}
+                <div className="space-y-1.5">
+                  <label className="font-bold text-foreground">Notas Adicionales del Técnico (Públicas)</label>
+                  <textarea
+                    rows={2}
+                    value={metadata.plain_notes || ""}
+                    placeholder="Escribir cualquier nota aclaratoria general que se mostrará como Notas del Diagnóstico al cliente..."
+                    onChange={(e) => handleSaveServiceMetadata({ plain_notes: e.target.value })}
+                    className="w-full bg-background border border-border rounded p-2 text-foreground leading-normal resize-none"
+                  />
+                </div>
+
+              </div>
+
+              <div className="border-t border-border/30 pt-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedServiceRequest(null);
+                    setNewLogText("");
+                    setNewLogImage("");
+                  }}
+                  className="px-4 py-2 bg-muted text-foreground border border-border font-bold uppercase rounded-lg hover:bg-muted/80 text-[10px] cursor-pointer"
+                >
+                  Cerrar Gestor de Orden
+                </button>
+              </div>
             </div>
-
-            <form 
-              onSubmit={async (e) => {
-                e.preventDefault();
-                await handleSaveCollection();
-              }}
-              className="space-y-4 text-xs"
-            >
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground">Nombre de la Colección/Página *</label>
-                <input
-                  type="text"
-                  required
-                  value={editingCollection.name || ""}
-                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, name: e.target.value } : null)}
-                  className="w-full bg-background border border-border rounded p-2 text-foreground font-medium"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground">Subtítulo Descriptivo *</label>
-                <input
-                  type="text"
-                  required
-                  value={editingCollection.subtitle || ""}
-                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, subtitle: e.target.value } : null)}
-                  className="w-full bg-background border border-border rounded p-2 text-foreground"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground">Imagen URL de Banner/Portada</label>
-                <input
-                  type="url"
-                  value={editingCollection.bg_url || editingCollection.bgUrl || ""}
-                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, bg_url: e.target.value, bgUrl: e.target.value } : null)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-background border border-border rounded p-2 text-foreground"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="font-semibold text-foreground">Texto de Introducción / Descripción Detallada</label>
-                <textarea
-                  rows={4}
-                  value={editingCollection.description || ""}
-                  onChange={(e) => setEditingCollection(prev => prev ? { ...prev, description: e.target.value } : null)}
-                  className="w-full bg-background border border-border rounded p-2 text-foreground resize-none leading-relaxed"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full h-11 bg-accent text-accent-foreground font-serif font-bold uppercase tracking-widest rounded-lg hover:bg-accent/90 transition-colors cursor-pointer"
-              >
-                Guardar Cambios de Sección
-              </button>
-            </form>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

@@ -3,6 +3,7 @@ import { ArrowLeft, ShoppingCart, Sparkles, ShieldCheck, Truck, RotateCcw, Heart
 import { useNavigate } from "../components/router.js";
 import { useCart } from "../components/cart/cart-provider.js";
 import { Product } from "../types.js";
+import { LocalLogoTransition } from "../components/logo-transition.js";
 
 interface ProductDetalleProps {
   slug: string;
@@ -298,7 +299,8 @@ export const ProductDetallePage: React.FC<ProductDetalleProps> = ({ slug }) => {
         </div>
 
         {/* Tab Body */}
-        <div className="p-6">
+        <div className="p-6 relative overflow-hidden">
+          <LocalLogoTransition triggerKey={activeTab} />
           {activeTab === "specs" && (
             <div className="space-y-4">
               {Object.keys(product.specifications).length === 0 ? (

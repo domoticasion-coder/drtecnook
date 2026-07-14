@@ -1363,17 +1363,37 @@ class SupabaseDb implements DbInterface {
 
   async createServiceRequest(request: Omit<ServiceRequest, "id" | "request_number" | "created_at" | "status">): Promise<ServiceRequest> {
     const reqNumber = `TEC-${Math.floor(10000 + Math.random() * 90000)}`;
-    const { data, error } = await this.client
-      .from("service_requests")
-      .insert({
-        ...request,
-        request_number: reqNumber,
-        status: "Pendiente"
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    try {
+      const { data, error } = await this.client
+        .from("service_requests")
+        .insert({
+          ...request,
+          request_number: reqNumber,
+          status: "Pendiente"
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (dbError: any) {
+      console.warn("Retrying database insert without customer_dni column:", dbError.message);
+      const fallbackRequest = { ...request };
+      if (fallbackRequest.customer_dni) {
+        fallbackRequest.problem_description = `[DNI: ${fallbackRequest.customer_dni}] ${fallbackRequest.problem_description}`;
+        delete fallbackRequest.customer_dni;
+      }
+      const { data, error } = await this.client
+        .from("service_requests")
+        .insert({
+          ...fallbackRequest,
+          request_number: reqNumber,
+          status: "Pendiente"
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
   }
 
   async updateServiceRequest(id: string, data: Partial<ServiceRequest>): Promise<ServiceRequest> {
@@ -1381,14 +1401,27 @@ class SupabaseDb implements DbInterface {
     delete payload.id;
     delete (payload as any).created_at;
     delete (payload as any).updated_at;
-    const { data: updated, error } = await this.client
-      .from("service_requests")
-      .update({ ...payload, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return updated;
+    try {
+      const { data: updated, error } = await this.client
+        .from("service_requests")
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return updated;
+    } catch (dbError: any) {
+      console.warn("Retrying database update without customer_dni column:", dbError.message);
+      delete payload.customer_dni;
+      const { data: updated, error } = await this.client
+        .from("service_requests")
+        .update({ ...payload, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return updated;
+    }
   }
 
   async deleteServiceRequest(id: string): Promise<boolean> {

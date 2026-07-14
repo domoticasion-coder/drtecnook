@@ -222,6 +222,8 @@ app.post("/api/service-requests", async (req, res) => {
   try {
     const {
       customer_name,
+      customer_dni,
+      dni,
       phone,
       email,
       device_type,
@@ -237,6 +239,7 @@ app.post("/api/service-requests", async (req, res) => {
       issue_description
     } = req.body;
 
+    const parsedDni = dni || customer_dni;
     const parsedPhone = phone || customer_phone;
     const parsedEmail = email || customer_email;
     const parsedProblem = problem_description || issue_description;
@@ -253,12 +256,13 @@ app.post("/api/service-requests", async (req, res) => {
     if (!parsedModel) parsedModel = "Genérico";
 
     // Server-side validation using mapped/fallback fields
-    if (!customer_name || !parsedPhone || !device_type || !parsedServiceType || !parsedProblem) {
-      return res.status(400).json({ error: "Por favor complete todos los campos obligatorios." });
+    if (!customer_name || !parsedPhone || !parsedDni || !device_type || !parsedServiceType || !parsedProblem) {
+      return res.status(400).json({ error: "Por favor complete todos los campos obligatorios, incluyendo el DNI." });
     }
 
     const newRequest = await db.createServiceRequest({
       customer_name,
+      customer_dni: parsedDni || null,
       phone: parsedPhone,
       email: parsedEmail || null,
       device_type,

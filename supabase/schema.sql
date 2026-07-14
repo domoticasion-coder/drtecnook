@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS service_requests (
   service_type VARCHAR(50) NOT NULL CHECK (service_type IN ('Reparación', 'Mantenimiento')),
   brand VARCHAR(100),
   model VARCHAR(100),
+  customer_dni VARCHAR(50),
   problem_description TEXT NOT NULL,
   diagnosis TEXT,
   estimated_price NUMERIC(12,2),

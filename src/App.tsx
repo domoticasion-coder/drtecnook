@@ -5,6 +5,7 @@ import { CartSheet } from "./components/cart/cart-sheet.js";
 import { Navigation } from "./components/navigation.js";
 import { Footer } from "./components/footer.js";
 import { ChatWidget } from "./components/chat-widget.js";
+import { PageTransitionOverlay } from "./components/logo-transition.js";
 
 // Page imports
 import { HomePage } from "./pages/home.js";
@@ -91,6 +92,9 @@ export default function App() {
         <div className="min-h-screen bg-background text-foreground flex flex-col selection:bg-accent/30 selection:text-accent">
           {/* Main Navigation Header */}
           <Navigation />
+
+          {/* Full-screen route transition curtain overlay styled in brand logo colors and icons */}
+          <PageTransitionOverlay />
 
           {/* Cart Drawer Overlay */}
           <CartSheet />

@@ -1,22 +1,38 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700;800&family=Russo+One&family=Orbitron:wght@400;500;700;900&family=Roboto+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Ode to Idle Gaming';
+  src: url('https://db.onlinewebfonts.com/t/2c7d91e847702a4bf732dfccb6d85ebf.woff2') format('woff2'),
+       url('https://db.onlinewebfonts.com/t/2c7d91e847702a4bf732dfccb6d85ebf.woff') format('woff'),
+       url('https://db.onlinewebfonts.com/t/2c7d91e847702a4bf732dfccb6d85ebf.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Gotham", "Montserrat", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Ode to Idle Gaming", "Russo One", "Orbitron", "Roboto Mono", monospace;
+  --font-mono: "Roboto Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-logo-pink: #ED4E9D;
+  --color-logo-yellow: #FFD028;
+  --color-logo-green: #37CE7F;
+  --color-logo-cyan: #17CBE0;
 
   --color-background: oklch(0.10 0.01 240);
   --color-foreground: oklch(0.97 0 0);
   --color-card: oklch(0.15 0.01 240);
   --color-primary: oklch(0.72 0.20 210);
   --color-primary-foreground: oklch(0.10 0 0);
-  --color-accent: oklch(0.78 0.18 195);
+  --color-accent: #17CBE0;
   --color-accent-foreground: oklch(0.10 0 0);
   --color-secondary: oklch(0.20 0.02 240);
   --color-muted: oklch(0.22 0.01 240);
   --color-muted-foreground: oklch(0.62 0.02 240);
-  --color-success: oklch(0.72 0.18 150);
-  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-success: #37CE7F;
+  --color-destructive: #ED4E9D;
   --color-border: oklch(0.25 0.02 240);
 
   --radius-lg: 0.5rem;
@@ -86,3 +102,33 @@
 .animate-pulse-subtle {
   animation: pulse-subtle 3s infinite ease-in-out;
 }
+
+/* Brand 4-Color Gradient Utilities based on the logo colors */
+.bg-logo-gradient {
+  background: linear-gradient(90deg, #ED4E9D 0%, #FFD028 33%, #37CE7F 66%, #17CBE0 100%);
+}
+
+.text-logo-gradient {
+  background: linear-gradient(90deg, #ED4E9D 0%, #FFD028 33%, #37CE7F 66%, #17CBE0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.border-logo-gradient {
+  position: relative;
+}
+
+.border-logo-gradient::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ED4E9D 0%, #FFD028 33%, #37CE7F 66%, #17CBE0 100%);
+}
+
+.logo-glow:hover {
+  box-shadow: 0 0 15px rgba(23, 203, 224, 0.25), 0 0 3px rgba(237, 78, 157, 0.2);
+}
+

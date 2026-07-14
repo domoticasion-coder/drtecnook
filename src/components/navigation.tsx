@@ -27,6 +27,8 @@ export const Navigation: React.FC = () => {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b border-border/40 glass">
+        {/* Brand 4-Color Gradient Top Bar */}
+        <div className="bg-logo-gradient h-[3px] w-full" />
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           
           {/* Logo image with custom size and referrer policy */}
@@ -56,7 +58,7 @@ export const Navigation: React.FC = () => {
                 >
                   {link.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent rounded-full" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-logo-gradient rounded-full" />
                   )}
                 </button>
               );
@@ -68,7 +70,7 @@ export const Navigation: React.FC = () => {
             {/* Search Trigger */}
             <button
               onClick={() => setIsSearchOpen(true)}
-              className="p-2 text-muted-foreground hover:text-accent hover:bg-muted/50 rounded-lg transition-all cursor-pointer"
+              className="p-2 text-muted-foreground hover:text-logo-yellow hover:bg-logo-yellow/10 rounded-lg transition-all cursor-pointer"
               title="Buscar productos"
             >
               <Search className="w-5 h-5" />
@@ -79,8 +81,8 @@ export const Navigation: React.FC = () => {
               onClick={() => handleLinkClick("/admin")}
               className={`p-2 rounded-lg transition-all cursor-pointer ${
                 path.startsWith("/admin") 
-                  ? "text-accent bg-accent/10" 
-                  : "text-muted-foreground hover:text-accent hover:bg-muted/50"
+                  ? "text-logo-pink bg-logo-pink/10" 
+                  : "text-muted-foreground hover:text-logo-pink hover:bg-logo-pink/10"
               }`}
               title="Panel Administrativo"
             >
@@ -90,12 +92,12 @@ export const Navigation: React.FC = () => {
             {/* Cart Trigger with items count badge */}
             <button
               onClick={() => setCartOpen(true)}
-              className="p-2 text-muted-foreground hover:text-accent hover:bg-muted/50 rounded-lg relative transition-all cursor-pointer"
+              className="p-2 text-muted-foreground hover:text-logo-green hover:bg-logo-green/10 rounded-lg relative transition-all cursor-pointer"
               title="Carrito de compras"
             >
               <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-accent text-accent-foreground text-[10px] font-serif font-bold h-4 w-4 rounded-full flex items-center justify-center animate-pulse-subtle">
+                <span className="absolute -top-0.5 -right-0.5 bg-logo-pink text-white text-[10px] font-serif font-bold h-4 w-4 rounded-full flex items-center justify-center animate-pulse-subtle">
                   {cartCount}
                 </span>
               )}

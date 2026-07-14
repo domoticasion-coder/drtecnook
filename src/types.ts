@@ -78,6 +78,7 @@ export interface ServiceRequest {
   service_type: 'Reparación' | 'Mantenimiento';
   brand: string | null;
   model: string | null;
+  customer_dni?: string | null;
   problem_description: string;
   diagnosis: string | null;
   estimated_price: number | null;
